@@ -1,6 +1,6 @@
 const {Schema, model} = require("mongoose")
 
-const notesSchema = new Schema ({
+const noteSchema = new Schema ({
     content: String,
     user: {
         type: Schema.Types.ObjectId,
@@ -10,4 +10,4 @@ const notesSchema = new Schema ({
 )
 
 //Export the Model
-module.exports = model("Notes", notesSchema)
+module.exports = model("Note", noteSchema)

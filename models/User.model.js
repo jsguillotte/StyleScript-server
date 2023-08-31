@@ -18,6 +18,18 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Name is required."],
     },
+    note: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Note'
+    }],
+    laundry: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Clothing' 
+    }],
+    packingList: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Clothing' 
+    }]
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`

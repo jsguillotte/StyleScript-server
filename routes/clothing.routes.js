@@ -135,6 +135,111 @@ router.put('/note/update/:clothingId/:noteId', async (req, res) => {
     }
 });
 
+// Add to Laundry
+router.post("/:id/add-to-laundry", async (req, res) => {
+    try {
+      const clothingId = req.params.id;
+      const updatedClothing = await Clothing.findByIdAndUpdate(
+        clothingId,
+        { $push: { laundry: "New Laundry Status" } }, 
+        { new: true }
+      );
+  
+      if (!updatedClothing) {
+        return res.status(404).json({ message: "Clothing not found" });
+      }
+  
+      res.json({ message: "Added to laundry", clothing: updatedClothing });
+    } catch (error) {
+      console.error("Error adding to laundry:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  //display laundry list
+    router.get("/laundry", async (req, res) => {
+        try {
+            const laundry = await Clothing.find({ laundry: { $exists: true } });
+            res.json(laundry);
+        } catch (error) {
+            console.error("Error getting laundry:", error);
+            res.status(500).json({ message: "Server error" });
+        }
+    });
+
+
+ // Remove from Laundry
+    router.post("/:id/remove-from-laundry", async (req, res) => {
+        try {
+            const clothingId = req.params.id;
+            const updatedClothing = await Clothing.findByIdAndUpdate(
+                clothingId,
+                { $pull: { laundry: "New Laundry Status" } },
+                { new: true }
+            ); 
+            if (!updatedClothing) {
+                return res.status(404).json({ message: "Clothing not found" });
+            }
+            res.json({ message: "Removed from laundry", clothing: updatedClothing });
+        } catch (error) {
+            console.error("Error removing from laundry:", error);
+            res.status(500).json({ message: "Server error" });
+        }
+    });
+
+    // Add to Packing List
+    router.post("/:id/add-to-packing-list", async (req, res) => {
+        try {
+            const clothingId = req.params.id;
+            const updatedClothing = await Clothing.findByIdAndUpdate(
+                clothingId,
+                { $push: { packingList: "New Packing List Status" } },
+                { new: true }
+            );
+            if (!updatedClothing) {
+                return res.status(404).json({ message: "Clothing not found" });
+            }
+            res.json({ message: "Added to packing list", clothing: updatedClothing });
+        } catch (error) {
+            console.error("Error adding to packing list:", error);
+            res.status(500).json({ message: "Server error" });
+        }
+    });
+
+    // display packing list
+
+    router.get("/packing-list", async (req, res) => {
+        try {
+            const packingList = await Clothing.find({ packingList: { $exists: true } });
+            res.json(packingList);
+        } catch (error) {
+            console.error("Error getting packing list:", error);
+            res.status(500).json({ message: "Server error" });
+        }
+    });
+
+    // Remove from Packing List
+    router.post("/:id/remove-from-packing-list", async (req, res) => {
+        try {
+            const clothingId = req.params.id;
+            const updatedClothing = await Clothing.findByIdAndUpdate(
+                clothingId,
+                { $pull: { packingList: "New Packing List Status" } },
+                { new: true }
+            );
+            if (!updatedClothing) {
+                return res.status(404).json({ message: "Clothing not found" });
+            }
+            res.json({ message: "Removed from packing list", clothing: updatedClothing });
+        } catch (error) {
+            console.error("Error removing from packing list:", error);
+            res.status(500).json({ message: "Server error" });
+        }
+    });
+    
+
+
+  
+
 
 
 

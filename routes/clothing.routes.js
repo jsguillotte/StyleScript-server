@@ -26,7 +26,7 @@ router.post('/clothing/create', async (req,res)=>{
 
 router.get('/clothing', async(req,res)=>{
     try{
-        let allClothings = await Clothing.find().populate('notes');
+        let allClothings = await Clothing.find();
         res.json(allClothings)
     }
     catch(error){
@@ -38,7 +38,7 @@ router.get('/clothing', async(req,res)=>{
 router.get('/clothing/:clothingId', async(req, res) => {
     const {clothingId} = req.params;
     try{
-        let foundClothing = await Clothing.findById(clothingId).populate('notes');
+        let foundClothing = await Clothing.findById(clothingId).populate('note');
         res.json(foundClothing)
     }
     catch(error){
@@ -99,7 +99,7 @@ router.post('/note/create/:clothingId', async(req, res)=>{
 })
 
 //Create a route to delete a note
-router.delete('note/delete/:clothingId/:noteId', async(req, res)=>{
+router.delete('/note/delete/:clothingId/:noteId', async(req, res)=>{
     const { clothingId, noteId } = req.params;
 
     try {

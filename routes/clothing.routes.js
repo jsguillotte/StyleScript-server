@@ -11,9 +11,9 @@ const Note = require('../models/Note.model');
 
 //POST ROUTE that Creates a new Clothing
 router.post('/clothing/create', async (req,res)=>{
-    const {title, img, brand,  description, careInstructions, laundry, season } = req.body;
+    const {title, image, type, color, brand,  description, careInstructions, season } = req.body;
     try{
-        let response = await Clothing.create({title, img, brand, description, careInstructions, laundry, season});
+        let response = await Clothing.create({title, image, type, color, brand, description, careInstructions, season});
         res.json(response)
 
     }
@@ -52,12 +52,12 @@ router.get('/clothing/:clothingId', async(req, res) => {
 
 // PUT route to update info of a Clothing
 
-router.put('/clothing/:clothingId', async(req,res)=>{
+router.put('/clothing/edit/:clothingId', async(req,res)=>{
     const {clothingId} = req.params;
-    const {title, img, brand, description, careInstructions, laundry, season} =  req.body;
+    const {title, image, type, color, brand, description, careInstructions, season} =  req.body;
 
     try {
-        let updateClothing = await Clothing.findByIdAndUpdate(clothingId, {title, img, brand, description, careInstructions, laundry, season}, {new: true}) 
+        let updateClothing = await Clothing.findByIdAndUpdate(clothingId, {title, image, type, color, brand, description, careInstructions, season}, {new: true}) 
         res.json(updateClothing)  
  }
  catch(error) {
@@ -235,7 +235,7 @@ router.post("/:id/add-to-laundry", async (req, res) => {
             res.status(500).json({ message: "Server error" });
         }
     });
-    
+
 
 
   

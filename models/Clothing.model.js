@@ -8,13 +8,14 @@ const { Schema, model } = require("mongoose");
 const clothingSchema = new Schema(
     {
         title: { type: String, required: true },
-        img: { type: String },
+        type: { type: String, required: true },
+        image: { type: String },
         brand: { type: String },
         size: { type: String },
         description: { type: String },
         careInstructions: { type: String }, 
         season: { type: String }, 
-        laundry: [{ type: String }],
+        color: [{ type: String }],
         note: [
             {
                 type: Schema.Types.ObjectId,

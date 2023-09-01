@@ -218,23 +218,24 @@ router.get("/laundry", isAuthenticated, async (req, res) => {
 });
 
 // Remove from Laundry
-router.post("/:id/remove-from-laundry", isAuthenticated, async (req, res) => {
-  try {
-    const clothingId = req.params.id;
-    const updatedClothing = await Clothing.findByIdAndUpdate(
-      clothingId,
-      { $pull: { laundry: "New Laundry Status" } },
-      { new: true }
-    );
-    if (!updatedClothing) {
-      return res.status(404).json({ message: "Clothing not found" });
+router.delete("/remove-from-laundry/:id", isAuthenticated, async (req, res) => {
+    const user = req.payload;
+    try {
+      const clothingId = req.params.id;
+      const updatedUser = await User.findByIdAndUpdate(
+        user._id, // Corrected the property name to user._id
+        { $pull: { laundry: clothingId } },
+        { new: true }
+      );
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" }); // Updated the message
+      }
+      res.json({ message: "Removed from laundry", user: updatedUser });
+    } catch (error) {
+      console.error("Error removing from laundry:", error);
+      res.status(500).json({ message: "Server error" });
     }
-    res.json({ message: "Removed from laundry", clothing: updatedClothing });
-  } catch (error) {
-    console.error("Error removing from laundry:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+  });
 
 // Add to Packing List
 router.post("/:id/add-to-packing-list", async (req, res) => {

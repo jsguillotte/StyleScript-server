@@ -138,66 +138,78 @@ router.post("/note/create/:clothingId", isAuthenticated, async (req, res) => {
 });
 
 //Create a route to delete a note
-router.delete("/note/delete/:clothingId/:noteId", isAuthenticated, async (req, res) => {
-  const { clothingId, noteId } = req.params;
+router.delete(
+  "/note/delete/:clothingId/:noteId",
+  isAuthenticated,
+  async (req, res) => {
+    const { clothingId, noteId } = req.params;
 
-  try {
-    // Delete the note itself
-    await Note.findByIdAndDelete(noteId);
+    try {
+      // Delete the note itself
+      await Note.findByIdAndDelete(noteId);
 
-    // Remove the note's reference from the clothing item
-    await Clothing.findByIdAndUpdate(clothingId, { $pull: { note: noteId } });
+      // Remove the note's reference from the clothing item
+      await Clothing.findByIdAndUpdate(clothingId, { $pull: { note: noteId } });
 
-    res.json({ message: "Note deleted" });
-  } catch (error) {
-    res.json(error);
+      res.json({ message: "Note deleted" });
+    } catch (error) {
+      res.json(error);
+    }
   }
-});
+);
 
 //Create a route to update a note
 
-router.put("/note/update/:clothingId/:noteId", isAuthenticated, async (req, res) => {
-  const { clothingId, noteId } = req.params;
-  const { content } = req.body;
+router.put(
+  "/note/update/:clothingId/:noteId",
+  isAuthenticated,
+  async (req, res) => {
+    const { clothingId, noteId } = req.params;
+    const { content } = req.body;
 
-  try {
-    // Update the note
-    const updatedNote = await Note.findByIdAndUpdate(
-      noteId,
-      { content },
-      { new: true }
-    );
+    try {
+      // Update the note
+      const updatedNote = await Note.findByIdAndUpdate(
+        noteId,
+        { content },
+        { new: true }
+      );
 
-    res.json(updatedNote);
-  } catch (error) {
-    res.json(error);
+      res.json(updatedNote);
+    } catch (error) {
+      res.json(error);
+    }
   }
-});
+);
 
 // Add to Laundry
-router.post("/:id/add-to-laundry", async (req, res) => {
-  try {
-    const clothingId = req.params.id;
-    const updatedClothing = await Clothing.findByIdAndUpdate(
-      clothingId,
-      { $push: { laundry: "New Laundry Status" } },
-      { new: true }
-    );
+router.post(
+  "/clothing/add-to-laundry/:id/",
+  isAuthenticated,
+  async (req, res) => {
+    const user = req.payload;
+    try {
+      const clothingId = req.params.id;
 
-    if (!updatedClothing) {
-      return res.status(404).json({ message: "Clothing not found" });
+      // Push the clothingId to the user's laundry array
+      await User.findByIdAndUpdate(user._id, {
+        $addToSet: { laundry: clothingId },
+      });
+
+      // Send a response indicating success
+      res.json({ message: "Added to laundry" });
+    } catch (error) {
+      console.error("Error adding to laundry:", error);
+      res.status(500).json({ message: "Server error" });
     }
-
-    res.json({ message: "Added to laundry", clothing: updatedClothing });
-  } catch (error) {
-    console.error("Error adding to laundry:", error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
+
 //display laundry list
-router.get("/laundry", async (req, res) => {
+router.get("/laundry", isAuthenticated, async (req, res) => {
+  const user = req.payload;
   try {
-    const laundry = await Clothing.find({ laundry: { $exists: true } });
+    const laundry = await User.findById(user._id).populate("laundry");
     res.json(laundry);
   } catch (error) {
     console.error("Error getting laundry:", error);
@@ -206,7 +218,7 @@ router.get("/laundry", async (req, res) => {
 });
 
 // Remove from Laundry
-router.post("/:id/remove-from-laundry", async (req, res) => {
+router.post("/:id/remove-from-laundry", isAuthenticated, async (req, res) => {
   try {
     const clothingId = req.params.id;
     const updatedClothing = await Clothing.findByIdAndUpdate(

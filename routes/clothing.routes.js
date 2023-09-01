@@ -120,7 +120,7 @@ router.delete("/clothing/delete/:clothingId", async (req, res) => {
 });
 
 //create a note for a specific clothing
-router.post("/note/create/:clothingId", async (req, res) => {
+router.post("/note/create/:clothingId", isAuthenticated, async (req, res) => {
   const { clothingId } = req.params;
   const { content } = req.body;
 
@@ -138,7 +138,7 @@ router.post("/note/create/:clothingId", async (req, res) => {
 });
 
 //Create a route to delete a note
-router.delete("/note/delete/:clothingId/:noteId", async (req, res) => {
+router.delete("/note/delete/:clothingId/:noteId", isAuthenticated, async (req, res) => {
   const { clothingId, noteId } = req.params;
 
   try {
@@ -156,7 +156,7 @@ router.delete("/note/delete/:clothingId/:noteId", async (req, res) => {
 
 //Create a route to update a note
 
-router.put("/note/update/:clothingId/:noteId", async (req, res) => {
+router.put("/note/update/:clothingId/:noteId", isAuthenticated, async (req, res) => {
   const { clothingId, noteId } = req.params;
   const { content } = req.body;
 

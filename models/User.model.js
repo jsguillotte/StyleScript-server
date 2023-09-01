@@ -22,6 +22,10 @@ const userSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Note'
     }],
+    userClothing: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Clothing' 
+    }],
     laundry: [{
       type: Schema.Types.ObjectId,
       ref: 'Clothing' 

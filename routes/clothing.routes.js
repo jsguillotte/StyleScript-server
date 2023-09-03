@@ -3,6 +3,8 @@
 const router = require("express").Router();
 
 const mongoose = require("mongoose");
+// ********* require fileUploader in order to use it *********
+const fileUploader = require("../config/cloudinary.config");
 
 const { isAuthenticated } = require("../middleware/jwt.middleware");
 
@@ -39,11 +41,13 @@ router.post("/clothing/create", isAuthenticated, async (req, res) => {
     await User.findByIdAndUpdate(user._id, {
       $push: { userClothing: newClothes._id },
     });
-    res.json(response);
+    res.json(newClothes);
   } catch (error) {
     res.json(error);
   }
 });
+
+
 
 //GET ROUTE that gets all the Clothings
 
@@ -54,6 +58,21 @@ router.get("/clothing", isAuthenticated, async (req, res) => {
     res.json(allClothings);
   } catch (error) {
     res.json(error);
+  }
+});
+
+router.post("/upload", isAuthenticated, fileUploader.single("image"), async (req, res) => {
+  const user = req.payload;
+  try {
+    if (!req.file) {
+      throw new Error("No file uploaded!");
+    }
+
+    // Get the URL of the uploaded image and send it as a response.
+    // 'image' can be any name, just make sure you remember to use the same when accessing it on the frontend
+    res.json({ image: req.file.path });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
@@ -238,30 +257,36 @@ router.delete("/remove-from-laundry/:id", isAuthenticated, async (req, res) => {
   });
 
 // Add to Packing List
-router.post("/:id/add-to-packing-list", async (req, res) => {
-  try {
-    const clothingId = req.params.id;
-    const updatedClothing = await Clothing.findByIdAndUpdate(
-      clothingId,
-      { $push: { packingList: "New Packing List Status" } },
-      { new: true }
-    );
-    if (!updatedClothing) {
-      return res.status(404).json({ message: "Clothing not found" });
+router.post(
+  "/clothing/add-to-packing/:id/",
+  isAuthenticated,
+  async (req, res) => {
+    const user = req.payload;
+    try {
+      const clothingId = req.params.id;
+
+      // Push the clothingId to the user's laundry array
+      await User.findByIdAndUpdate(user._id, {
+        $addToSet: { packing: clothingId },
+      });
+
+      // Send a response indicating success
+      res.json({ message: "Added to packing list" });
+      
+    } catch (error) {
+      console.error("Error adding to packing list:", error);
+      res.status(500).json({ message: "Server error" });
     }
-    res.json({ message: "Added to packing list", clothing: updatedClothing });
-  } catch (error) {
-    console.error("Error adding to packing list:", error);
-    res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 // display packing list
 
-router.get("/packing-list", async (req, res) => {
+router.get("/packing", isAuthenticated, async (req, res) => {
+  const user = req.payload;
   try {
-    const packingList = await Clothing.find({ packingList: { $exists: true } });
-    res.json(packingList);
+    const packing = await User.findById(user._id).populate("packing");
+    res.json(packing);
   } catch (error) {
     console.error("Error getting packing list:", error);
     res.status(500).json({ message: "Server error" });
@@ -269,26 +294,26 @@ router.get("/packing-list", async (req, res) => {
 });
 
 // Remove from Packing List
-router.post("/:id/remove-from-packing-list", async (req, res) => {
+
+router.delete("/remove-from-packing/:id", isAuthenticated, async (req, res) => {
+  const user = req.payload;
   try {
     const clothingId = req.params.id;
-    const updatedClothing = await Clothing.findByIdAndUpdate(
-      clothingId,
-      { $pull: { packingList: "New Packing List Status" } },
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id, // Corrected the property name to user._id
+      { $pull: { packing: clothingId } },
       { new: true }
     );
-    if (!updatedClothing) {
-      return res.status(404).json({ message: "Clothing not found" });
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" }); // Updated the message
     }
-    res.json({
-      message: "Removed from packing list",
-      clothing: updatedClothing,
-    });
+    res.json({ message: "Removed from packing list", user: updatedUser });
   } catch (error) {
     console.error("Error removing from packing list:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // Exporting Express Router with all its routes
 

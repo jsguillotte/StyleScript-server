@@ -30,7 +30,7 @@ const userSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Clothing' 
     }],
-    packingList: [{
+    packing: [{
       type: Schema.Types.ObjectId,
       ref: 'Clothing' 
     }]

@@ -300,7 +300,7 @@ router.delete("/remove-from-packing/:id", isAuthenticated, async (req, res) => {
   try {
     const clothingId = req.params.id;
     const updatedUser = await User.findByIdAndUpdate(
-      user._id, // Corrected the property name to user._id
+      user._id, 
       { $pull: { packing: clothingId } },
       { new: true }
     );

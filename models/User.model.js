@@ -33,7 +33,11 @@ const userSchema = new Schema(
     packing: [{
       type: Schema.Types.ObjectId,
       ref: 'Clothing' 
-    }]
+    }],
+    calendarClothing: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Scheduler' 
+    }],
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`

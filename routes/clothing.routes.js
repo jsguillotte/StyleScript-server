@@ -12,6 +12,7 @@ const { isAuthenticated } = require("../middleware/jwt.middleware");
 const Clothing = require("../models/Clothing.model");
 const Note = require("../models/Note.model");
 const User = require("../models/User.model");
+const Scheduler = require("../models/Scheduler.model");
 
 //POST ROUTE that Creates a new Clothing
 router.post("/clothing/create", isAuthenticated, async (req, res) => {
@@ -47,8 +48,6 @@ router.post("/clothing/create", isAuthenticated, async (req, res) => {
   }
 });
 
-
-
 //GET ROUTE that gets all the Clothings
 
 router.get("/clothing", isAuthenticated, async (req, res) => {
@@ -61,20 +60,25 @@ router.get("/clothing", isAuthenticated, async (req, res) => {
   }
 });
 
-router.post("/upload", isAuthenticated, fileUploader.single("image"), async (req, res) => {
-  const user = req.payload;
-  try {
-    if (!req.file) {
-      throw new Error("No file uploaded!");
-    }
+router.post(
+  "/upload",
+  isAuthenticated,
+  fileUploader.single("image"),
+  async (req, res) => {
+    const user = req.payload;
+    try {
+      if (!req.file) {
+        throw new Error("No file uploaded!");
+      }
 
-    // Get the URL of the uploaded image and send it as a response.
-    // 'image' can be any name, just make sure you remember to use the same when accessing it on the frontend
-    res.json({ image: req.file.path });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+      // Get the URL of the uploaded image and send it as a response.
+      // 'image' can be any name, just make sure you remember to use the same when accessing it on the frontend
+      res.json({ image: req.file.path });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
   }
-});
+);
 
 // GET Route that gets info of a specific Clothing
 router.get("/clothing/:clothingId", async (req, res) => {
@@ -201,6 +205,70 @@ router.put(
   }
 );
 
+// Add to Calendar
+router.post(
+  "/clothing/add-to-calendar/:id/",
+  isAuthenticated,
+  async (req, res) => {
+    const user = req.payload;
+    try {
+      const clothingId = req.params.id;
+
+      let clothing = await Clothing.findById(clothingId);
+      let clothingTitle = clothing.title;
+
+      let startDate = Date.now();
+      let endDate = new Date().setUTCHours(22, 59, 59, 999);
+
+      let allSchedules = await Scheduler.find();
+
+      let id = allSchedules.length;
+
+      // Push the clothingId to the user's laundry array
+      let newScheduler = await Scheduler.create({
+        title: clothingTitle,
+        startDate,
+        endDate,
+        id,
+      });
+
+      // NEW : Push the schedulerId to the user's clothingCalendar array
+      await User.findByIdAndUpdate(user._id, {
+        $addToSet: { calendarClothing: newScheduler._id },
+      });
+
+      // Send a response indicating success
+      res.json({ message: "Added to calendar" });
+    } catch (error) {
+      console.error("Error adding to calendar:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+router.post("/update-calendar", isAuthenticated, async (req, res) => {
+  const calendarData = req.body.data;
+
+  try {
+    for (let i = 0; i < calendarData.length; i++) {
+      let schedule = calendarData[i];
+      await Scheduler.findByIdAndUpdate(schedule._id, { ...schedule });
+    }
+  } catch {}
+});
+
+//display calendar
+router.get("/calendar-clothing", isAuthenticated, async (req, res) => {
+  const user = req.payload;
+  try {
+    let myUser = await User.findById(user._id).populate("calendarClothing");
+    res.json(myUser.calendarClothing);
+  } catch (error) {
+    console.error("Error getting calendar entries:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Add to Laundry
 router.post(
   "/clothing/add-to-laundry/:id/",
@@ -238,23 +306,23 @@ router.get("/laundry", isAuthenticated, async (req, res) => {
 
 // Remove from Laundry
 router.delete("/remove-from-laundry/:id", isAuthenticated, async (req, res) => {
-    const user = req.payload;
-    try {
-      const clothingId = req.params.id;
-      const updatedUser = await User.findByIdAndUpdate(
-        user._id, // Corrected the property name to user._id
-        { $pull: { laundry: clothingId } },
-        { new: true }
-      );
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" }); // Updated the message
-      }
-      res.json({ message: "Removed from laundry", user: updatedUser });
-    } catch (error) {
-      console.error("Error removing from laundry:", error);
-      res.status(500).json({ message: "Server error" });
+  const user = req.payload;
+  try {
+    const clothingId = req.params.id;
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id, // Corrected the property name to user._id
+      { $pull: { laundry: clothingId } },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" }); // Updated the message
     }
-  });
+    res.json({ message: "Removed from laundry", user: updatedUser });
+  } catch (error) {
+    console.error("Error removing from laundry:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // Add to Packing List
 router.post(
@@ -272,7 +340,6 @@ router.post(
 
       // Send a response indicating success
       res.json({ message: "Added to packing list" });
-      
     } catch (error) {
       console.error("Error adding to packing list:", error);
       res.status(500).json({ message: "Server error" });
@@ -300,7 +367,7 @@ router.delete("/remove-from-packing/:id", isAuthenticated, async (req, res) => {
   try {
     const clothingId = req.params.id;
     const updatedUser = await User.findByIdAndUpdate(
-      user._id, 
+      user._id,
       { $pull: { packing: clothingId } },
       { new: true }
     );
@@ -313,7 +380,6 @@ router.delete("/remove-from-packing/:id", isAuthenticated, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // Exporting Express Router with all its routes
 

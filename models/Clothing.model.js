@@ -16,6 +16,7 @@ const clothingSchema = new Schema(
     careInstructions: { type: String },
     season: { type: String },
     color: [{ type: String }],
+    sample: { type: Boolean, default: false},
     note: [
       {
         type: Schema.Types.ObjectId,

@@ -10,16 +10,19 @@ const jwt = require("jsonwebtoken");
 // Require the User model in order to interact with the database
 const User = require("../models/User.model");
 
+const Clothing = require("../models/Clothing.model");
+
 // Require necessary (isAuthenticated) middleware in order to control access to specific routes
 const { isAuthenticated } = require("../middleware/jwt.middleware.js");
+const { response } = require("../app");
 
 // How many rounds should bcrypt run the salt (default - 10 rounds)
 const saltRounds = 10;
 
 // POST /auth/signup  - Creates a new user in the database
-router.post("/signup", (req, res, next) => {
+router.post("/signup", async (req, res, next) => {
   const { email, password, name } = req.body;
-
+  try{
   // Check if email or password or name are provided as empty strings
   if (email === "" || password === "" || name === "") {
     res.status(400).json({ message: "Provide email, password and name" });
@@ -44,9 +47,7 @@ router.post("/signup", (req, res, next) => {
   }
 
   // Check the users collection if a user with the same email already exists
-  User.findOne({ email })
-    .then((foundUser) => {
-      // If the user with the same email already exists, send an error response
+    let foundUser = await User.findOne({ email })
       if (foundUser) {
         res.status(400).json({ message: "User already exists." });
         return;
@@ -56,23 +57,24 @@ router.post("/signup", (req, res, next) => {
       const salt = bcrypt.genSaltSync(saltRounds);
       const hashedPassword = bcrypt.hashSync(password, salt);
 
-      // Create the new user in the database
-      // We return a pending promise, which allows us to chain another `then`
-      return User.create({ email, password: hashedPassword, name });
+     let allClothes = await Clothing.find();
+     let sampleClothes = allClothes.map((clothing) => {
+          if(clothing.sample){
+            return clothing._id;
+          }
     })
-    .then((createdUser) => {
-      // Deconstruct the newly created user object to omit the password
-      // We should never expose passwords publicly
-      const { email, name, _id } = createdUser;
-
-      // Create a new object that doesn't expose the password
+    let createdUser = await User.create({ email, password: hashedPassword, name, userClothing: sampleClothes});
+    if(createdUser){
+    const { email, name, _id } = createdUser;
       const user = { email, name, _id };
 
       // Send a json response containing the user object
       res.status(201).json({ user: user });
-    })
-    .catch((err) => next(err)); // In this case, we send error handling to the error handling middleware.
-});
+    }}
+    catch(error){
+      next(error);
+    }
+  })
 
 // POST  /auth/login - Verifies email and password and returns a JWT
 router.post("/login", (req, res, next) => {
@@ -116,6 +118,7 @@ router.post("/login", (req, res, next) => {
       }
     })
     .catch((err) => next(err)); // In this case, we send error handling to the error handling middleware.
+    
 });
 
 // GET  /auth/verify  -  Used to verify JWT stored on the client

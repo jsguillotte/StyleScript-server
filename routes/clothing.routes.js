@@ -269,6 +269,31 @@ router.get("/calendar-clothing", isAuthenticated, async (req, res) => {
   }
 });
 
+//delete from calendar
+router.delete("/calendar-clothing/:schedulerId", isAuthenticated, async (req, res) => {
+  const user = req.payload;
+  const schedulerId = req.params.schedulerId;
+
+  try {
+    const myUser = await User.findById(user._id);
+
+    // Check if the user has the calendarClothing entry with the specified ID
+    if (!myUser.calendarClothing.includes(schedulerId)) {
+      return res.status(404).json({ message: "Calendar entry not found" });
+    }
+
+    // Remove the entry from the user's calendarClothing array
+    myUser.calendarClothing.pull(schedulerId);
+    await myUser.save();
+
+    res.json({ message: "Calendar entry deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting calendar entry:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 // Add to Laundry
 router.post(
   "/clothing/add-to-laundry/:id/",
@@ -304,6 +329,33 @@ router.get("/laundry", isAuthenticated, async (req, res) => {
   }
 });
 
+// Delete all laundry for a specific user
+router.delete('/remove-from-laundry/all', isAuthenticated, async (req, res) => {
+  const user = req.payload;
+
+  try {
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' }); // Updated the message
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $unset: { laundry: 1 } }, 
+      { multi: true },
+    );
+    
+
+    console.log("Laundry items deleted for user:", user._id);
+    
+    res.json({ message: 'All laundry deleted', user: updatedUser });
+  } catch (error) {
+    console.error('Error deleting all laundry:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 // Remove from Laundry
 router.delete("/remove-from-laundry/:id", isAuthenticated, async (req, res) => {
   const user = req.payload;
@@ -324,50 +376,11 @@ router.delete("/remove-from-laundry/:id", isAuthenticated, async (req, res) => {
   }
 });
 
-//route to remove all items from laundry
 
- router.put ("/remove-from-laundry/all", isAuthenticated, async (req, res) => {
-    const user = req.payload;
-    console.log(user)
 
-    try {
-      const updatedUser = await User.findByIdAndUpdate(
-        user._id,
-        { $set: { laundry: [] } },
-        { new: true }
-      );
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" }); // Updated the message
-      }
-      res.json({ message: "Removed from laundry", user: updatedUser });
-    } catch (error) {
-      console.error("Error removing from laundry:", error);
-      res.status(500).json({ message: "Server error" });
-    }
-  }
-);
 
-/*
-router.delete("/remove-from-laundry/all", isAuthenticated, async (req, res) => {
-  const user = req.payload;
-  console.log(user.laundry)
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      user._id, 
-      { $set: {laundry: [] } },
-      { new: true }
-    );
-    
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" }); // Updated the message
-    }
-    res.json({ message: "Removed from laundry", user: updatedUser });
-  } catch (error) {
-    console.error("Error removing from laundry:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-*/
+
+
 // Add to Packing List
 router.post(
   "/clothing/add-to-packing/:id/",

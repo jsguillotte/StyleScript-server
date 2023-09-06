@@ -377,7 +377,31 @@ router.delete("/remove-from-laundry/:id", isAuthenticated, async (req, res) => {
 });
 
 
+// Delete all packing for a specific user
+router.delete('/remove-from-packing/all', isAuthenticated, async (req, res) => {
+  const user = req.payload;
 
+  try {
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' }); // Updated the message
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $unset: { packing: 1 } }, 
+      { multi: true },
+    );
+    
+
+    console.log("Packing items deleted for user:", user._id);
+    
+    res.json({ message: 'All packing deleted', user: updatedUser });
+  } catch (error) {
+    console.error('Error deleting all packing:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 
 

@@ -22,59 +22,64 @@ const saltRounds = 10;
 // POST /auth/signup  - Creates a new user in the database
 router.post("/signup", async (req, res, next) => {
   const { email, password, name } = req.body;
-  try{
-  // Check if email or password or name are provided as empty strings
-  if (email === "" || password === "" || name === "") {
-    res.status(400).json({ message: "Provide email, password and name" });
-    return;
-  }
+  try {
+    // Check if email or password or name are provided as empty strings
+    if (email === "" || password === "" || name === "") {
+      res.status(400).json({ message: "Provide email, password and name" });
+      return;
+    }
 
-  // This regular expression check that the email is of a valid format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  if (!emailRegex.test(email)) {
-    res.status(400).json({ message: "Provide a valid email address." });
-    return;
-  }
+    // This regular expression check that the email is of a valid format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ message: "Provide a valid email address." });
+      return;
+    }
 
-  // This regular expression checks password for special characters and minimum length
-  const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
-  if (!passwordRegex.test(password)) {
-    res.status(400).json({
-      message:
-        "Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter.",
-    });
-    return;
-  }
+    // This regular expression checks password for special characters and minimum length
+    const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+    if (!passwordRegex.test(password)) {
+      res.status(400).json({
+        message:
+          "Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter.",
+      });
+      return;
+    }
 
-  // Check the users collection if a user with the same email already exists
-    let foundUser = await User.findOne({ email })
-      if (foundUser) {
-        res.status(400).json({ message: "User already exists." });
-        return;
+    // Check the users collection if a user with the same email already exists
+    let foundUser = await User.findOne({ email });
+    if (foundUser) {
+      res.status(400).json({ message: "User already exists." });
+      return;
+    }
+
+    // If email is unique, proceed to hash the password
+    const salt = bcrypt.genSaltSync(saltRounds);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+
+    let allClothes = await Clothing.find();
+    let sampleClothes = allClothes.map((clothing) => {
+      if (clothing.sample) {
+        return clothing._id;
       }
-
-      // If email is unique, proceed to hash the password
-      const salt = bcrypt.genSaltSync(saltRounds);
-      const hashedPassword = bcrypt.hashSync(password, salt);
-
-     let allClothes = await Clothing.find();
-     let sampleClothes = allClothes.map((clothing) => {
-          if(clothing.sample){
-            return clothing._id;
-          }
-    })
-    let createdUser = await User.create({ email, password: hashedPassword, name, userClothing: sampleClothes});
-    if(createdUser){
-    const { email, name, _id } = createdUser;
+    });
+    let createdUser = await User.create({
+      email,
+      password: hashedPassword,
+      name,
+      userClothing: sampleClothes,
+    });
+    if (createdUser) {
+      const { email, name, _id } = createdUser;
       const user = { email, name, _id };
 
       // Send a json response containing the user object
       res.status(201).json({ user: user });
-    }}
-    catch(error){
-      next(error);
     }
-  })
+  } catch (error) {
+    next(error);
+  }
+});
 
 // POST  /auth/login - Verifies email and password and returns a JWT
 router.post("/login", (req, res, next) => {
@@ -100,10 +105,10 @@ router.post("/login", (req, res, next) => {
 
       if (passwordCorrect) {
         // Deconstruct the user object to omit the password
-        const { _id, email, name } = foundUser;
+        const { _id, email, name, laundry, packing } = foundUser;
 
         // Create an object that will be set as the token payload
-        const payload = { _id, email, name };
+        const payload = { _id, email, name, laundry, packing };
 
         // Create a JSON Web Token and sign it
         const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
@@ -118,7 +123,6 @@ router.post("/login", (req, res, next) => {
       }
     })
     .catch((err) => next(err)); // In this case, we send error handling to the error handling middleware.
-    
 });
 
 // GET  /auth/verify  -  Used to verify JWT stored on the client

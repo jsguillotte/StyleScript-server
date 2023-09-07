@@ -74,7 +74,7 @@ router.post(
       }
 
       // Get the URL of the uploaded image and send it as a response.
-      // 'image' can be any name, just make sure you remember to use the same when accessing it on the frontend
+      
       res.json({ image: req.file.path });
     } catch (error) {
       res.status(400).json({ message: error.message });

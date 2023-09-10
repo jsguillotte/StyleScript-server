@@ -42,11 +42,17 @@ To get started with Style Script application visit the link ot netlify: https://
 The Virtual Closet application utilizes the following technologies and tools:
 
 MongoDB: Database for storing user clothing and calendar data.
+
 Express.js: Backend framework for handling server logic and API routes.
+
 React: Frontend library for building the user interface.
+
 Node.js: JavaScript runtime environment for running the server.
+
 Material-UI and CSS: UI framework and CSS for styling and components.
+
 Cloudinary: For image upload and hosting.
+
 React Scheduler: For Calendar: drag-and-drop functionality.
 
 **Contributing**

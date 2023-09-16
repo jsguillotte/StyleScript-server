@@ -2,7 +2,7 @@
 
 StyleScript Virtual Closet Application (MERN Stack)
 
-StyleScript-client repository: https://github.com/maureen-treacy/StyleScript-client
+StyleScript-client repository: https://github.com/jsguillotte/StyleScript-client
 
 Welcome to StyleScript! This web application allows users to manage their clothing items, organize them into categories, add notes, filter by season, search for items, and even plan outfits on a dynamic calendar. Whether you're a fashion enthusiast or simply want to keep your wardrobe organized, this application has you covered.
 
